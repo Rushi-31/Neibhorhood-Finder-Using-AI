@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.rushikesh.neibhorhoodai" />
+                  <option name="mobileSdkAppId" value="1:1013387542983:android:b49ea49c8c44a7a06299e2" />
+                  <option name="projectId" value="neibhorhoodai731" />
+                  <option name="projectNumber" value="1013387542983" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

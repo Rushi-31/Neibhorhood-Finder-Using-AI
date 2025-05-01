@@ -1,15 +1,14 @@
-package com.rushikesh.neibhorhoodai.screens
 
+package com.rushikesh.neibhorhoodai.screens
 
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,11 +19,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,7 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -51,10 +48,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.rushikesh.neibhorhoodai.BottomNavigationBar
 import com.rushikesh.neibhorhoodai.data.professionList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -71,7 +66,8 @@ import java.nio.charset.StandardCharsets
 fun QuestionsScreen(name: String, navController: NavController) {
     val questions = listOf(
         "What is your profession?",
-        "What is your monthly income?",
+        "Select your monthly income?",
+        "How much rent are you interested in paying?",
         "How would you describe your community sentiment?",
         "How accessible is public transport for you?",
         "Do you prefer a quiet or lively neighborhood?",
@@ -80,16 +76,22 @@ fun QuestionsScreen(name: String, navController: NavController) {
         "Do you have children, or are you planning for children?"
     )
 
-
+    val requiredCount = 5
     val professionOptions = professionList
     val sentimentOptions = listOf("Low", "Moderate", "High", "Very High")
     val transportOptions = listOf("Low", "Moderate", "High", "Very High")
     val binaryOptions = listOf("Yes", "No")
     val importanceOptions = listOf("Not Important", "Somewhat Important", "Very Important")
     val lifestyleOptions = listOf("Quiet", "Lively")
-    val incomeOptions = listOf("0-10000", "10000-50000", "50000-100000", "100000+")
+    val incomeOptions = listOf("0-10000", "10000-30000", "30000-50000", "50000-100000", "100000+")
+    val rentOptions = listOf("0-10000", "10000-50000", "50000-100000", "100000+")
 
-    val answers = remember { mutableStateListOf<String>() }
+    val optionsList = listOf(
+        professionOptions, incomeOptions, rentOptions, sentimentOptions,
+        transportOptions, lifestyleOptions, importanceOptions, binaryOptions, binaryOptions
+    )
+
+    val answers = remember { mutableStateListOf<String?>().apply { repeat(questions.size) { add(null) } } }
     var currentIndex by remember { mutableStateOf(0) }
     var input by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
@@ -101,39 +103,40 @@ fun QuestionsScreen(name: String, navController: NavController) {
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
+          TopAppBar(
                 title = {
-                    Text(text = "Neighborhood AI", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                    Text("Neighborhood AI", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                 },
-                navigationIcon = {
-                    Icon(Icons.Default.Menu, contentDescription = "Menu", modifier = Modifier.padding(start = 16.dp), tint = Color.White)
-                },
+
                 actions = {
-                    Icon(Icons.Default.MoreVert, contentDescription = "More Options", modifier = Modifier.padding(end = 16.dp), tint = Color.White)
+                    Icon(Icons.Default.Settings, contentDescription = "More Options", modifier = Modifier.padding(end = 16.dp)
+                        .clickable{
+                            navController.navigate("settings_screen")
+                        }
+                        , tint = Color.White)
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color(0xFF0288D1))
             )
         },
-        bottomBar = {BottomNavigationBar(navController= rememberNavController())}
-
+//        bottomBar ={ BottomNavigationBar(navController = navController)}
     ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
+                .padding(horizontal = 22.dp, vertical = 40.dp),
             verticalArrangement = Arrangement.Top
         ) {
-            // QnA Visual (optional)
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Hello $name 👋",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF0288D1)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(text = "Answer a few questions about yourself and know your neighborhood better!",
-                fontSize = 18.sp, fontWeight = FontWeight.Normal, color = Color.Gray)
+            Text("Hello $name 👋", fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0288D1),
+                modifier = Modifier.padding(vertical = 15.dp)
+
+
+                )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Answer a few questions about yourself and know your neighborhood better!", fontSize = 16.sp, color = Color.Gray,
+                modifier = Modifier
+                    .padding(horizontal = 15.dp)
+                )
             Spacer(modifier = Modifier.height(24.dp))
 
             Crossfade(targetState = currentIndex, label = "") { index ->
@@ -142,245 +145,206 @@ fun QuestionsScreen(name: String, navController: NavController) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(Color(0xFFE1F5FE), RoundedCornerShape(16.dp))
-                            .padding(24.dp),
+                            .padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(
-                            text = questions[index],
-                            style = MaterialTheme.typography.headlineSmall.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold),
-                            color = Color(0xFF0288D1)
-                        )
-
+                        Text(questions[index], fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0288D1))
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        when (index) {
-                            0 -> {
-                                // Profession input
-                                OutlinedTextField(
-                                    value = input,
-                                    onValueChange = {
-                                        input = it
-                                        error = null
-                                    },
-                                    label = { Text("Search profession") },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    singleLine = true,
-                                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                                        focusedBorderColor = Color(0xFF0288D1),
-                                        unfocusedBorderColor = Color.Gray,
-                                        focusedLabelColor = Color(0xFF0288D1)
-                                    )
-                                )
+                        if (index == 0) {
+                            OutlinedTextField(
+                                value = input,
+                                onValueChange = {
+                                    input = it
+                                    error = null
+                                },
+                                label = { Text("Search profession") },
+                                modifier = Modifier.fillMaxWidth()
+                            )
 
-                                val filteredProfessions = professionOptions.filter {
-                                    it.contains(input, ignoreCase = true)
-                                }.take(6)
-
-                                if (input.isNotEmpty()) {
-                                    LazyColumn(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(160.dp)
-                                            .background(Color.Transparent, RoundedCornerShape(8.dp))
-                                    ) {
-                                        items(filteredProfessions) { profession ->
-                                            Text(
-                                                text = profession,
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .clickable {
-                                                        input = profession
-                                                        answers.add(profession)
-                                                        input = ""
-                                                        currentIndex++
-                                                    }
-                                                    .padding(12.dp)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                            1 -> {
-                                // Income input
-                                ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
-                                    OutlinedTextField(
-                                        readOnly = true,
-                                        value = input,
-                                        onValueChange = {},
-                                        label = { Text("Select Income Range") },
-                                        trailingIcon = {
-                                            Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-                                        },
-                                        modifier = Modifier
-                                            .menuAnchor()
-                                            .fillMaxWidth(),
-                                        colors = TextFieldDefaults.outlinedTextFieldColors(
-                                            focusedBorderColor = Color(0xFF0288D1),
-                                            unfocusedBorderColor = Color.Gray
-                                        )
-                                    )
-                                    ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                                        incomeOptions.forEach { option ->
-                                            DropdownMenuItem(
-                                                text = { Text(option) },
-                                                onClick = {
-                                                    input = option
-                                                    expanded = false
-                                                    error = null
+                            val filtered = professionOptions.filter { it.contains(input, ignoreCase = true) }.take(6)
+                            if (input.isNotEmpty()) {
+                                LazyColumn(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(160.dp)
+                                ) {
+                                    items(filtered) { profession ->
+                                        Text(
+                                            profession,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    input =
+                                                        profession       // Show selection in the TextField
+                                                    answers.add(profession) // Store the answer
+                                                    currentIndex++
+                                                    input=""
                                                 }
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                            else -> {
-                                // Other inputs (Sentiment, Transport, Lifestyle, etc.)
-                                val options = when (index) {
-                                    2 -> sentimentOptions
-                                    3 -> transportOptions
-                                    4 -> lifestyleOptions
-                                    5 -> importanceOptions
-                                    6, 7 -> binaryOptions
-                                    else -> emptyList()
-                                }
-
-                                ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
-                                    OutlinedTextField(
-                                        readOnly = true,
-                                        value = input,
-                                        onValueChange = {},
-                                        label = { Text("Select") },
-                                        trailingIcon = {
-                                            Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-                                        },
-                                        modifier = Modifier
-                                            .menuAnchor()
-                                            .fillMaxWidth(),
-                                        colors = TextFieldDefaults.outlinedTextFieldColors(
-                                            focusedBorderColor = Color(0xFF0288D1),
-                                            unfocusedBorderColor = Color.Gray
+                                                .padding(12.dp)
                                         )
-                                    )
-                                    ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                                        options.forEach { option ->
-                                            DropdownMenuItem(
-                                                text = { Text(option) },
-                                                onClick = {
-                                                    input = option
-                                                    expanded = false
-                                                    error = null
-                                                }
-                                            )
-                                        }
                                     }
                                 }
                             }
+                        } else {
+                            DropdownQuestion(
+                                selected = input,
+                                options = optionsList[index],
+                                onSelected = {
+                                    input = it
+                                }
+                            )
                         }
 
-                        // Error message visibility
-                        AnimatedVisibility(visible = error != null, enter = fadeIn(), exit = fadeOut()) {
-                            Text(error ?: "", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                        AnimatedVisibility(visible = error != null) {
+                            Text(error ?: "", color = MaterialTheme.colorScheme.error)
                         }
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
 
-                        // Submit or Next button
-                        Button(
-                            onClick = {
-                                if (input.isBlank()) {
-                                    error = "Please enter a response"
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            if (currentIndex > 0) {
+                               Button(onClick = {
+                                    currentIndex--
+                                    input = answers[currentIndex] ?: ""
+                                    error = null
+                                }, colors = ButtonDefaults.buttonColors(
+                                   containerColor = Color(0xFF0288D1), // Background color
+                                   contentColor = Color.White          // Text/Icon color
+                               )) {
+                                    Text("Previous")
+                                }
+                            }
+                            Button(onClick = {
+                                if (currentIndex < requiredCount && input.isBlank()) {
+                                    error = "Please select or enter a value"
                                     return@Button
                                 }
-
-                                answers.add(input)
+                                answers[currentIndex] = if (input.isNotBlank()) input else null
                                 input = ""
                                 error = null
 
-                                if (index == questions.size - 1) {
+                                if (currentIndex == questions.lastIndex) {
                                     isLoading = true
                                     coroutineScope.launch {
-                                        try {
-                                            val incomeMax = answers[1].split("-").lastOrNull()?.replace("+", "")?.toFloatOrNull() ?: 0f
-
-                                            val body = mapOf(
-                                                "Professions" to answers[0],
-                                                "Income_Estimate" to incomeMax,
-                                                "Community Sentiment" to answers[2],
-                                                "Public Transport" to answers[3]
-                                            )
-
-                                            val gson = Gson()
-                                            val json = gson.toJson(body)
-                                            val client = OkHttpClient()
-                                            val requestBody = json.toRequestBody("application/json".toMediaType())
-                                            val request = Request.Builder()
-                                                .url("http://10.0.2.2:5000/recommend")
-                                                .post(requestBody)
-                                                .build()
-
-                                            val response = withContext(Dispatchers.IO) {
-                                                client.newCall(request).execute()
-                                            }
-
-                                            if (!response.isSuccessful) {
-                                                throw Exception("Network error: ${response.code}")
-                                            }
-
-                                            val responseBody = response.body?.string() ?: throw Exception("Empty response")
-                                            val type = object : TypeToken<List<Map<String, Any>>>() {}.type
-                                            val responseList: List<Map<String, Any>> = gson.fromJson(responseBody, type)
-
-                                            val resultJson = responseList.joinToString("||") {
-                                                listOf(
-                                                    it["Neighborhood"].toString(),
-                                                    it["Professions"].toString(),
-                                                    it["Schools Nearby"].toString(),
-                                                    it["Hospitals Nearby"].toString(),
-                                                    it["Crime Rate"].toString(),
-                                                    it["Similarity Score"].toString()
-                                                ).joinToString("##")
-                                            }
-
-                                            val encodedResult = URLEncoder.encode(resultJson, StandardCharsets.UTF_8.toString())
-
-                                            // Ensure navigation is done on the main thread
-                                            withContext(Dispatchers.Main) {
-                                                navController.navigate("result_screen/$encodedResult")
-                                            }
-                                        } catch (e: Exception) {
-                                            Log.e("API", "Error: ${e.localizedMessage}")
-                                            error = "Failed to connect. Please try again."
-                                        } finally {
+                                        submitAnswers(answers, navController, onError = {
+                                            error = it
+                                        }, onDone = {
                                             isLoading = false
-                                        }
+                                        })
                                     }
                                 } else {
                                     currentIndex++
                                 }
                             },
-                            enabled = !isLoading,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0288D1))
-                        ) {
-                            Text(if (index == questions.size - 1) "Submit" else "Next", color = Color.White)
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF0288D1), // Background color
+                                    contentColor = Color.White          // Text/Icon color
+                                )
+
+                            ) {
+                                Text(if (currentIndex == questions.lastIndex) "Submit" else "Next")
+                            }
                         }
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
-            LinearProgressIndicator(
-                progress = progress,
-                modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFF0288D1)
+            LinearProgressIndicator(progress = progress, modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp)
             )
-//            Image(painter = painterResource(id = R.drawable.qna), contentDescription = "")
 
+////            Image(painter = painterResource(id = R.drawable.qna), contentDescription ="qna image"
+//            ,
+//                modifier = Modifier.size(500.dp)
+//                    .align(Alignment.End)
+//                )
             if (isLoading) {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp)
+                    )
                 CircularProgressIndicator()
             }
         }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DropdownQuestion(selected: String, options: List<String>, onSelected: (String) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+        OutlinedTextField(
+            readOnly = true,
+            value = selected,
+            onValueChange = {},
+            label = { Text("Select") },
+            trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) },
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth()
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            options.forEach { option ->
+                DropdownMenuItem(text = { Text(option) }, onClick = {
+                    onSelected(option)
+                    expanded = false
+                })
+            }
+        }
+    }
+}
+
+suspend fun submitAnswers(
+    answers: List<String?>,
+    navController: NavController,
+    onError: (String) -> Unit,
+    onDone: () -> Unit
+) {
+    try {
+        val incomeMax = answers[1]?.split("-")?.lastOrNull()?.replace("+", "")?.toFloatOrNull() ?: 0f
+        val body = mapOf(
+            "Professions" to answers[0],
+            "Income_Estimate" to incomeMax,
+            "Rent_Range" to answers[2],
+            "Community Sentiment" to answers[3],
+            "Public Transport" to answers[4]
+        )
+
+        val gson = Gson()
+        val json = gson.toJson(body)
+        val client = OkHttpClient()
+        val requestBody = json.toRequestBody("application/json".toMediaType())
+        val request = Request.Builder().url("http://10.0.2.2:5000/recommend").post(requestBody).build()
+
+        val response = withContext(Dispatchers.IO) { client.newCall(request).execute() }
+        if (!response.isSuccessful) throw Exception("Network error: ${response.code}")
+        val responseBody = response.body?.string() ?: throw Exception("Empty response")
+
+        val type = object : TypeToken<List<Map<String, Any>>>() {}.type
+        val resultList: List<Map<String, Any>> = gson.fromJson(responseBody, type)
+        val result = resultList.joinToString("||") {
+            listOf(
+                it["Neighborhood"].toString(),
+                it["Professions"].toString(),
+                it["Schools Nearby"].toString(),
+                it["Hospitals Nearby"].toString(),
+                it["Crime Rate"].toString(),
+                it["Similarity Score"].toString()
+            ).joinToString("##")
+        }
+
+        val encoded = URLEncoder.encode(result, StandardCharsets.UTF_8.toString())
+        withContext(Dispatchers.Main) {
+            navController.navigate("result_screen/$encoded")
+        }
+    } catch (e: Exception) {
+        Log.e("API", "Error: ${e.localizedMessage}")
+        withContext(Dispatchers.Main) { onError("Failed to connect. Please try again.") }
+    } finally {
+        onDone()
+    }
+}
+

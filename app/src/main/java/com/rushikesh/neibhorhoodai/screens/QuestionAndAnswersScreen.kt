@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -76,25 +77,21 @@ fun QuestionsScreen(name: String, navController: NavController) {
         "Do you have children, or are you planning for children?"
     )
 
-    val requiredCount = 5
-    val professionOptions = professionList
-    val sentimentOptions = listOf("Low", "Moderate", "High", "Very High")
-    val transportOptions = listOf("Low", "Moderate", "High", "Very High")
-    val binaryOptions = listOf("Yes", "No")
-    val importanceOptions = listOf("Not Important", "Somewhat Important", "Very Important")
-    val lifestyleOptions = listOf("Quiet", "Lively")
-    val incomeOptions = listOf("0-10000", "10000-30000", "30000-50000", "50000-100000", "100000+")
-    val rentOptions = listOf("0-10000", "10000-50000", "50000-100000", "100000+")
-
     val optionsList = listOf(
-        professionOptions, incomeOptions, rentOptions, sentimentOptions,
-        transportOptions, lifestyleOptions, importanceOptions, binaryOptions, binaryOptions
+        professionList,
+        listOf("0-10000", "10000-30000", "30000-50000", "50000-100000", "100000+"),
+        listOf("0-10000", "10000-50000", "30000-50000", "50000-100000", "100000+"),
+        listOf("Low", "Moderate", "High", "Very High"),
+        listOf("Low", "Moderate", "High", "Very High"),
+        listOf("Quiet", "Lively"),
+        listOf("Not Important", "Somewhat Important", "Very Important"),
+        listOf("Yes", "No"),
+        listOf("Yes", "No")
     )
 
+    val requiredCount = 5
     val answers = remember { mutableStateListOf<String?>().apply { repeat(questions.size) { add(null) } } }
     var currentIndex by remember { mutableStateOf(0) }
-    var input by remember { mutableStateOf("") }
-    var expanded by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
@@ -103,40 +100,31 @@ fun QuestionsScreen(name: String, navController: NavController) {
 
     Scaffold(
         topBar = {
-          TopAppBar(
-                title = {
-                    Text("Neighborhood AI", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                },
-
+            TopAppBar(
+                title = { Text("Neighborhood AI", color = Color.White, fontWeight = FontWeight.Bold) },
                 actions = {
-                    Icon(Icons.Default.Settings, contentDescription = "More Options", modifier = Modifier.padding(end = 16.dp)
-                        .clickable{
-                            navController.navigate("settings_screen")
-                        }
-                        , tint = Color.White)
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Settings",
+                        modifier = Modifier
+                            .padding(end = 16.dp)
+                            .clickable { navController.navigate("settings_screen") },
+                        tint = Color.White
+                    )
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color(0xFF0288D1))
             )
-        },
-//        bottomBar ={ BottomNavigationBar(navController = navController)}
+        }
     ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .padding(horizontal = 22.dp, vertical = 40.dp),
-            verticalArrangement = Arrangement.Top
+                .padding(horizontal = 22.dp, vertical = 30.dp)
         ) {
-            Text("Hello $name 👋", fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0288D1),
-                modifier = Modifier.padding(vertical = 15.dp)
-
-
-                )
+            Text("Hello $name 👋", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0288D1))
             Spacer(modifier = Modifier.height(8.dp))
-            Text("Answer a few questions about yourself and know your neighborhood better!", fontSize = 16.sp, color = Color.Gray,
-                modifier = Modifier
-                    .padding(horizontal = 15.dp)
-                )
+            Text("Answer a few questions about yourself and know your neighborhood better!", fontSize = 16.sp, color = Color.Gray)
             Spacer(modifier = Modifier.height(24.dp))
 
             Crossfade(targetState = currentIndex, label = "") { index ->
@@ -152,96 +140,93 @@ fun QuestionsScreen(name: String, navController: NavController) {
                         Spacer(modifier = Modifier.height(16.dp))
 
                         if (index == 0) {
+                            var searchText by remember { mutableStateOf("") }
+                            val filteredOptions = remember(searchText) {
+                                professionList.filter { it.contains(searchText, ignoreCase = true) }.take(6)
+                            }
+
                             OutlinedTextField(
-                                value = input,
-                                onValueChange = {
-                                    input = it
-                                    error = null
-                                },
-                                label = { Text("Search profession") },
+                                value = searchText,
+                                onValueChange = { searchText = it },
+                                label = { Text("Search Profession") },
                                 modifier = Modifier.fillMaxWidth()
                             )
+                            Spacer(modifier = Modifier.height(8.dp))
 
-                            val filtered = professionOptions.filter { it.contains(input, ignoreCase = true) }.take(6)
-                            if (input.isNotEmpty()) {
-                                LazyColumn(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(160.dp)
-                                ) {
-                                    items(filtered) { profession ->
-                                        Text(
-                                            profession,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .clickable {
-                                                    input =
-                                                        profession       // Show selection in the TextField
-                                                    answers.add(profession) // Store the answer
-                                                    currentIndex++
-                                                    input=""
-                                                }
-                                                .padding(12.dp)
-                                        )
-                                    }
+                            if (searchText.isNotBlank()) {
+                                LazyColumn(modifier = Modifier.heightIn(max = 180.dp)) {
+                                items(filteredOptions) { profession ->
+                                    Text(
+                                        text = profession,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                answers[index] = profession
+                                                currentIndex++
+                                                error = null
+                                            }
+                                            .padding(12.dp),
+                                        fontSize = 16.sp
+                                    )
                                 }
                             }
-                        } else {
+                        }} else {
+                            var selectedOption by remember { mutableStateOf(answers[index] ?: "") }
                             DropdownQuestion(
-                                selected = input,
+                                selected = selectedOption,
                                 options = optionsList[index],
                                 onSelected = {
-                                    input = it
+                                    selectedOption = it
+                                    answers[index] = it
                                 }
                             )
                         }
 
                         AnimatedVisibility(visible = error != null) {
-                            Text(error ?: "", color = MaterialTheme.colorScheme.error)
+                            Text(error ?: "", color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 10.dp))
                         }
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
                             if (currentIndex > 0) {
-                               Button(onClick = {
-                                    currentIndex--
-                                    input = answers[currentIndex] ?: ""
-                                    error = null
-                                }, colors = ButtonDefaults.buttonColors(
-                                   containerColor = Color(0xFF0288D1), // Background color
-                                   contentColor = Color.White          // Text/Icon color
-                               )) {
+                                Button(
+                                    onClick = {
+                                        currentIndex--
+                                        error = null
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0288D1), contentColor = Color.White)
+                                ) {
                                     Text("Previous")
                                 }
                             }
-                            Button(onClick = {
-                                if (currentIndex < requiredCount && input.isBlank()) {
-                                    error = "Please select or enter a value"
-                                    return@Button
-                                }
-                                answers[currentIndex] = if (input.isNotBlank()) input else null
-                                input = ""
-                                error = null
 
-                                if (currentIndex == questions.lastIndex) {
-                                    isLoading = true
-                                    coroutineScope.launch {
-                                        submitAnswers(answers, navController, onError = {
-                                            error = it
-                                        }, onDone = {
-                                            isLoading = false
-                                        })
+                            Button(
+                                onClick = {
+                                    if (currentIndex < requiredCount && answers[currentIndex].isNullOrBlank()) {
+                                        error = "This field is required"
+                                        return@Button
                                     }
-                                } else {
-                                    currentIndex++
-                                }
-                            },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFF0288D1), // Background color
-                                    contentColor = Color.White          // Text/Icon color
-                                )
 
+                                    error = null
+
+                                    if (currentIndex == questions.lastIndex) {
+                                        isLoading = true
+                                        coroutineScope.launch {
+                                            submitAnswers(
+                                                answers, navController,
+                                                onError = { error = it },
+                                                onDone = { isLoading = false }
+                                            )
+                                        }
+                                    } else {
+                                        currentIndex++
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0288D1), contentColor = Color.White)
                             ) {
                                 Text(if (currentIndex == questions.lastIndex) "Submit" else "Next")
                             }
@@ -251,19 +236,10 @@ fun QuestionsScreen(name: String, navController: NavController) {
             }
 
             Spacer(modifier = Modifier.height(20.dp))
-            LinearProgressIndicator(progress = progress, modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 10.dp)
-            )
+            LinearProgressIndicator(progress = progress, modifier = Modifier.fillMaxWidth())
 
-////            Image(painter = painterResource(id = R.drawable.qna), contentDescription ="qna image"
-//            ,
-//                modifier = Modifier.size(500.dp)
-//                    .align(Alignment.End)
-//                )
             if (isLoading) {
-                Spacer(modifier = Modifier.height(16.dp)
-                    )
+                Spacer(modifier = Modifier.height(20.dp))
                 CircularProgressIndicator()
             }
         }
@@ -277,10 +253,10 @@ fun DropdownQuestion(selected: String, options: List<String>, onSelected: (Strin
 
     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
         OutlinedTextField(
-            readOnly = true,
             value = selected,
             onValueChange = {},
             label = { Text("Select") },
+            readOnly = true,
             trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) },
             modifier = Modifier
                 .menuAnchor()
@@ -288,10 +264,13 @@ fun DropdownQuestion(selected: String, options: List<String>, onSelected: (Strin
         )
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             options.forEach { option ->
-                DropdownMenuItem(text = { Text(option) }, onClick = {
-                    onSelected(option)
-                    expanded = false
-                })
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onSelected(option)
+                        expanded = false
+                    }
+                )
             }
         }
     }
@@ -317,7 +296,10 @@ suspend fun submitAnswers(
         val json = gson.toJson(body)
         val client = OkHttpClient()
         val requestBody = json.toRequestBody("application/json".toMediaType())
-        val request = Request.Builder().url("http://10.0.2.2:5000/recommend").post(requestBody).build()
+        val request = Request.Builder()
+            .url("http://10.0.2.2:5000/recommend")
+            .post(requestBody)
+            .build()
 
         val response = withContext(Dispatchers.IO) { client.newCall(request).execute() }
         if (!response.isSuccessful) throw Exception("Network error: ${response.code}")
@@ -325,6 +307,7 @@ suspend fun submitAnswers(
 
         val type = object : TypeToken<List<Map<String, Any>>>() {}.type
         val resultList: List<Map<String, Any>> = gson.fromJson(responseBody, type)
+
         val result = resultList.joinToString("||") {
             listOf(
                 it["Neighborhood"].toString(),
@@ -347,4 +330,3 @@ suspend fun submitAnswers(
         onDone()
     }
 }
-

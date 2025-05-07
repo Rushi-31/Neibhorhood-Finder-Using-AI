@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1013387542983",
+    "project_id": "neibhorhoodai731",
+    "storage_bucket": "neibhorhoodai731.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1013387542983:android:b49ea49c8c44a7a06299e2",
+        "android_client_info": {
+          "package_name": "com.rushikesh.neibhorhoodai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDDc_lkDN_B_hL5CqQ5kFrBFFfveIaDFDw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

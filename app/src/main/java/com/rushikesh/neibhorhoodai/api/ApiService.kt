@@ -1,7 +1,5 @@
 package com.rushikesh.neibhorhoodai.api
 import com.rushikesh.neibhorhoodai.models.Neighborhood
-import com.rushikesh.neibhorhoodai.models.PropertyInput
-import com.rushikesh.neibhorhoodai.models.PropertyResponse
 import com.rushikesh.neibhorhoodai.models.UserInput
 import retrofit2.Response
 import retrofit2.http.Body
@@ -14,8 +12,8 @@ interface ApiService {
         @Body input: UserInput
     ): Response<List<Neighborhood>>
 
-    @POST("recommend_properties")
-    suspend fun getProperties(
-        @Body input: PropertyInput
-    ): Response<PropertyResponse>
+//    @POST("recommend_properties")
+//    suspend fun getProperties(
+//        @Body input: PropertyInput
+//    ): Response<PropertyResponse>
 }

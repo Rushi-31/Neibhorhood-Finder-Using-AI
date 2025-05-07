@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">NeibhorhoodAI</string>
+    <string name="footer_text">© 2025 rushipc@gmail.com</string>
+    <string name="linkedin_url">https://linkedin.com/in/rushikesh731</string>
 </resources>

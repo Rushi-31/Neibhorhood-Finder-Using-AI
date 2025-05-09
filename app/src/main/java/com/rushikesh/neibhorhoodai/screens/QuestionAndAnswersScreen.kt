@@ -122,7 +122,7 @@ fun QuestionsScreen(name: String, navController: NavController) {
                 .fillMaxSize()
                 .padding(horizontal = 22.dp, vertical = 30.dp)
         ) {
-            Text("Hello $name 👋", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0288D1))
+            Text( text ="Hello "+ name.replaceFirstChar { it.uppercaseChar() }+"👋", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0288D1))
             Spacer(modifier = Modifier.height(8.dp))
             Text("Answer a few questions about yourself and know your neighborhood better!", fontSize = 16.sp, color = Color.Gray)
             Spacer(modifier = Modifier.height(24.dp))
@@ -236,7 +236,10 @@ fun QuestionsScreen(name: String, navController: NavController) {
             }
 
             Spacer(modifier = Modifier.height(20.dp))
-            LinearProgressIndicator(progress = progress, modifier = Modifier.fillMaxWidth())
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth(),
+            )
 
             if (isLoading) {
                 Spacer(modifier = Modifier.height(20.dp))
@@ -297,7 +300,7 @@ suspend fun submitAnswers(
         val client = OkHttpClient()
         val requestBody = json.toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
-            .url("http://10.0.2.2:5000/recommend")
+            .url("https://web-production-52e3.up.railway.app/recommend")
             .post(requestBody)
             .build()
 

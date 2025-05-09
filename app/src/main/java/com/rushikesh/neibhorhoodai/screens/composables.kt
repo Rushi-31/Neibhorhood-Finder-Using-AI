@@ -36,11 +36,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import com.rushikesh.neibhorhoodai.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -175,20 +176,30 @@ fun AboutScreen() {
         }
     }
 }
-// --- PROFILE SCREEN ---
 @OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun ProfileScreen(navController: NavHostController) {
     val auth = FirebaseAuth.getInstance()
     val currentUser = auth.currentUser
+    val database = FirebaseDatabase.getInstance().reference
+    val uid = currentUser?.uid
 
-    // Check if the user is logged in
-    val name = currentUser?.displayName ?: "User"
-    val email = currentUser?.email ?: "No email"
+    var name by remember { mutableStateOf("User") }
+    var email by remember { mutableStateOf("No email") }
+    var role by remember { mutableStateOf("Role not set") }
 
-    // Fallback if currentUser is null (user is not logged in)
+    LaunchedEffect(uid) {
+        uid?.let {
+            database.child("users").child(it).get().addOnSuccessListener { snapshot ->
+                name = snapshot.child("name").getValue(String::class.java) ?: "User"
+                email = snapshot.child("email").getValue(String::class.java) ?: "No email"
+                role = snapshot.child("role").getValue(String::class.java) ?: "Role not set"
+            }
+        }
+    }
+
     if (currentUser == null) {
-        // Handle the case where the user is not logged in (optional)
         Text("No user logged in")
         return
     }
@@ -212,57 +223,82 @@ fun ProfileScreen(navController: NavHostController) {
         ) {
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Display the profile picture (initial or avatar)
-            Surface(
+            // Circular Avatar with Initial
+            Box(
                 modifier = Modifier
                     .size(120.dp)
-                    .clip(CircleShape),
-                color = Color(0xFF1976D2)
+                    .clip(CircleShape)
+                    .background(Color(0xFF1976D2)),
+                contentAlignment = Alignment.Center
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = name.firstOrNull()?.uppercase() ?: "U",
-                        fontSize = 48.sp,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Text(
+                    text = name.firstOrNull()?.uppercase() ?: "U",
+                    fontSize = 48.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Display user's name and email
-            Text(name, fontSize = 24.sp, color = Color(0xFF333333), fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(email, fontSize = 14.sp, color = Color(0xFF666666))
+            // Name, Email & Role
+            Text(
+                text = name.replaceFirstChar { it.uppercaseChar() },
+                fontSize = 24.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(7.dp))
+            Text(
+                text = email,
+                fontSize = 16.sp,
+                color = Color.Gray
+            )
+            
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // App Version Card
             Card(
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                modifier = Modifier.fillMaxWidth()
+                elevation = CardDefaults.cardElevation(4.dp),
+                colors = CardDefaults.cardColors(Color.White),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
             ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text("App Version", fontSize = 18.sp, color = Color(0xFF1976D2))
-                    Text("v1.0.0", fontSize = 14.sp, color = Color.Black)
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Text(
+                        text = "App Version",
+                        fontSize = 16.sp,
+                        color = Color(0xFF1976D2),
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = "v1.0.0",
+                        fontSize = 14.sp,
+                        color = Color.Black
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
             // Logout Button
             Button(
                 onClick = {
                     auth.signOut()
                     navController.navigate("auth") {
-                        popUpTo(0) { inclusive = true }
-                        launchSingleTop = true
+                        popUpTo(0)
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .clip(RoundedCornerShape(28.dp)),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
             ) {
                 Text("Logout", color = Color.White, fontSize = 16.sp)
             }
